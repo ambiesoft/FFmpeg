@@ -4777,10 +4777,94 @@ static void log_callback_null(void *ptr, int level, const char *fmt, va_list vl)
 {
 }
 
+
+// https://www.codesd.com/item/use-shutdownblockrequestcreate-in-the-win32-console-application.html
+typedef BOOL(WINAPI* SBRCREATEFUNC)(HWND, LPCWSTR);
+
+static int RegisterShutdownBlockReason(HWND hWnd)
+{
+	SBRCREATEFUNC ShutdownBlockReasonCreate;
+	// HWND hWnd = GetForegroundWindow();
+	// HWND hWnd = GetConsoleWindow();
+	HINSTANCE hinstLib = LoadLibrary("user32.dll");
+	if (!hinstLib)
+	{
+		printf("\nFailed to LoadLibrary(\"user32.dll\")\n");
+		return 0;
+	}	
+	ShutdownBlockReasonCreate = (SBRCREATEFUNC)GetProcAddress(hinstLib, "ShutdownBlockReasonCreate");
+	if (!ShutdownBlockReasonCreate)
+	{
+		printf("\nCouldn't load ShutdownBlockReasonCreate procedure\n");
+		return 0;
+	}
+		
+	if (!(ShutdownBlockReasonCreate)(hWnd, L"Preventing shutdown"))
+	{
+		printf("\nfailed To Register Reason, failure code: %d\n", GetLastError());
+		return 0;
+	}
+		
+	printf("\nRegistered ShutdownBlockReasonCreate\n");
+	return 1;
+}
+
+static int preventShutdown()
+{
+	HINSTANCE hInst = GetModuleHandle(NULL);
+	HWND hWnd = NULL;
+	const char* className = "FFMpegShutdownStopperClass";
+
+	WNDCLASSEX wcex;
+
+	memset(&wcex, 0, sizeof(wcex));
+	wcex.cbSize = sizeof(WNDCLASSEX);
+
+	wcex.style = 0; //CS_HREDRAW | CS_VREDRAW;
+	wcex.lpfnWndProc = DefWindowProc;
+	wcex.cbClsExtra = 0;
+	wcex.cbWndExtra = 0;
+	wcex.hInstance = hInst;
+	wcex.hIcon = NULL;
+	wcex.hCursor = NULL;
+	wcex.hbrBackground = NULL; //(HBRUSH)(COLOR_WINDOW+1);
+	wcex.lpszMenuName = NULL;
+	wcex.lpszClassName = className;
+	wcex.hIconSm = NULL;
+
+	if (!RegisterClassEx(&wcex))
+	{
+		perror("RegisterClassEx");
+		return 0;
+	}
+	hWnd = CreateWindowEx(
+		0, //dwExStyles,
+		className,
+		NULL, //pWinName,
+		0, //dwStyles,
+		0,
+		0,
+		0,
+		0,
+		NULL,
+		NULL,
+		hInst,
+		NULL);
+	if(!hWnd)
+	{
+		perror("CreateWindowEx");
+		return 0;
+	}
+	return RegisterShutdownBlockReason(hWnd);
+}
+
 int main(int argc, char **argv)
 {
     int i, ret;
     int64_t ti;
+
+	if(!preventShutdown())
+		return 1;
 
     init_dynload();
 
