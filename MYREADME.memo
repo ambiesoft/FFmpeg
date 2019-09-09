@@ -14,7 +14,7 @@ pacman -S --needed $MINGW_PACKAGE_PREFIX-gcc $MINGW_PACKAGE_PREFIX-nasm $MINGW_P
 
 
 # Add following flags for debuggin
---disable-optimizations --disable-stripping
+--enable-debug=2 --disable-optimizations --disable-stripping
 and use cv2pdf to create pdf
 
 ## 0-3, default is 2
