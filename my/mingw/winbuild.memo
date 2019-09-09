@@ -1,0 +1,6 @@
+run my/mingw/winbin/startbat.bat
+
+> sh configure --prefix=./winbuild --toolchain=msvc
+> make
+
+> "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE\devenv.exe" ffmpeg.exe
