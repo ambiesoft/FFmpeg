@@ -1,0 +1,67 @@
+# x265
+hg clone https://bitbucket.org/multicoreware/x265
+cd x265/build/msys
+cmake -DCMAKE_INSTALL_PREFIX=/usr/local -G "MSYS Makefiles" ../../source
+make
+make install
+
+#ffmpeg
+pacman -S --needed $MINGW_PACKAGE_PREFIX-gcc $MINGW_PACKAGE_PREFIX-nasm $MINGW_PACKAGE_PREFIX-diffutils $MINGW_PACKAGE_PREFIX-pkg-config $MINGW_PACKAGE_PREFIX-libopusenc $MINGW_PACKAGE_PREFIX-x265 $MINGW_PACKAGE_PREFIX-x264-git $MINGW_PACKAGE_PREFIX-libde265 $MINGW_PACKAGE_PREFIX-kvazaar $MINGW_PACKAGE_PREFIX-gnutls
+./configure --prefix=/opt/ffmpeg-$MINGW_CHOST --arch=$MSYSTEM_CARCH --enable-dxva2 --enable-d3d11va --enable-fontconfig --enable-gnutls --enable-gpl --enable-libass --enable-libbluray --enable-libcaca --enable-libcelt --enable-libfreetype --enable-libgsm --enable-libmfx --enable-libmodplug --enable-libmp3lame --enable-libopencore_amrnb --enable-libopencore_amrwb --enable-libopenjpeg --enable-libopus --enable-librtmp --enable-libspeex --enable-libtheora --enable-libvorbis --enable-libx264 --enable-libx265 --enable-libxvid --enable-libvpx --enable-libwebp --enable-openal --enable-libwavpack --enable-pic --enable-postproc --enable-runtime-cpudetect --enable-shared --enable-static --enable-swresample --enable-version3 --enable-zlib --disable-doc
+
+# add --disable-debug if you want
+
+
+
+# Add following flags for debuggin
+--disable-optimizations --disable-stripping
+and use cv2pdf to create pdf
+
+## 0-3, default is 2
+--enable-debug=3
+
+
+
+
+
+
+
+
+
+
+
+# using clang (notwork)
+--cc=clang --cxx=clang++ --ld=ld.lld 
+
+# not work
+--cc=clang-cl --cxx=clang-cpp --ld=lld-link
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# gomi
+## not work
+./configure --extra-libs='-static' --extra-cflags='--static' --enable-nonfree --enable-gpl --enable-libopus --enable-libx264 --enable-libx265 --prefix=/opt/ffmpeg
+
+## OK
+./configure --enable-gpl --enable-libopus --enable-libx264 --enable-libx265 --prefix=/opt/ffmpeg-MINGW_CHOST
+
+
+## no
+./configure --extra-cflags='--static' --enable-nonfree --enable-gpl --enable-libopus --enable-libx264 --enable-libx265 

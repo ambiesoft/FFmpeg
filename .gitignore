@@ -1,3 +1,4 @@
+*.suo
 *.a
 *.o
 *.o.*
@@ -36,3 +37,5 @@
 /lcov/
 /src
 /mapfile
+ffmpeg.sln
+ffprobe.sln
