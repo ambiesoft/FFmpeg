@@ -1,6 +1,11 @@
 run my/mingw/winbin/startbat.bat
 
-> sh configure --prefix=./winbuild --toolchain=msvc
+> sh configure --prefix=./winbuild --toolchain=msvc --enable-gpl --enable-libx265
 > make
 
+# moreflags
+--enable-libx265
+
 > "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE\devenv.exe" ffmpeg.exe
+or
+> "C:\Program Files\Microsoft Visual Studio\2019\Community\Common7\IDE\devenv.exe" ffmpeg.exe
