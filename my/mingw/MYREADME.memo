@@ -7,15 +7,18 @@ make install
 
 #ffmpeg
 pacman -S --needed $MINGW_PACKAGE_PREFIX-gcc $MINGW_PACKAGE_PREFIX-nasm $MINGW_PACKAGE_PREFIX-diffutils $MINGW_PACKAGE_PREFIX-pkg-config $MINGW_PACKAGE_PREFIX-libopusenc $MINGW_PACKAGE_PREFIX-x265 $MINGW_PACKAGE_PREFIX-x264-git $MINGW_PACKAGE_PREFIX-libde265 $MINGW_PACKAGE_PREFIX-kvazaar $MINGW_PACKAGE_PREFIX-gnutls
-./configure --prefix=/opt/ffmpeg-$MINGW_CHOST --arch=$MSYSTEM_CARCH --enable-dxva2 --enable-d3d11va --enable-fontconfig --enable-gnutls --enable-gpl --enable-libass --enable-libbluray --enable-libcaca --enable-libcelt --enable-libfreetype --enable-libgsm --enable-libmfx --enable-libmodplug --enable-libmp3lame --enable-libopencore_amrnb --enable-libopencore_amrwb --enable-libopenjpeg --enable-libopus --enable-librtmp --enable-libspeex --enable-libtheora --enable-libvorbis --enable-libx264 --enable-libx265 --enable-libxvid --enable-libvpx --enable-libwebp --enable-openal --enable-libwavpack --enable-pic --enable-postproc --enable-runtime-cpudetect --enable-shared --enable-static --enable-swresample --enable-version3 --enable-zlib --disable-doc
+./configure --prefix=/opt/ffmpeg-$MINGW_CHOST --arch=$MSYSTEM_CARCH --enable-dxva2 --enable-d3d11va --enable-fontconfig --enable-gnutls --enable-gpl --enable-libass --enable-libbluray --enable-libcaca --enable-libcelt --enable-libfreetype --enable-libgsm --enable-libmfx --enable-libmodplug --enable-libmp3lame --enable-libopencore_amrnb --enable-libopencore_amrwb --enable-libopenjpeg --enable-libopus --enable-librtmp --enable-libspeex --enable-libtheora --enable-libvorbis --enable-libx264 --enable-libx265 --enable-libxvid --enable-libvpx --enable-libwebp --enable-openal --enable-libwavpack --enable-pic --enable-postproc --enable-runtime-cpudetect --enable-shared --enable-static --enable-swresample --enable-version3 --enable-zlib --disable-doc --enable-ffplay
 
-# add --disable-debug for release
-
-
+# add for release
+--disable-debug
 
 # Add following flags for debuggin
 --enable-debug=2 --disable-optimizations --disable-stripping
-and use mingbin/cv2pdf.exe to create pdf
+
+and use mingbin/cv2pdf.exe to create pdb
+
+# debug
+start command prompt from explorer my\mingw\winbin\startbat.bat
 start vs by 'dev2019 /opt/ffmpeg-$MINGW_CHOST/bin/ffmpeg.exe'
 
 ## 0-3, default is 2

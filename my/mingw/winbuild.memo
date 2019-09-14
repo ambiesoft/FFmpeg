@@ -1,10 +1,14 @@
-run my/mingw/winbin/startbat.bat
+run my/mingw/winbin/startbat.bat to start command prompt with env
 
-> sh configure --prefix=./winbuild --toolchain=msvc --enable-gpl --enable-libx265
+> sh configure --prefix=./winbuild --toolchain=msvc --enable-gpl --debug --enable-debug --disable-optimizations
+
 > make
 
 # moreflags
 --enable-libx265
+--debug
+--enable-debug
+--disable-optimizations 
 
 > "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE\devenv.exe" ffmpeg.exe
 or
