@@ -44,8 +44,7 @@ static int ff_tls_close(URLContext *h)
         tls_close(p->ctx);
         tls_free(p->ctx);
     }
-    if (p->tls_shared.tcp)
-        ffurl_close(p->tls_shared.tcp);
+    ffurl_closep(&p->tls_shared.tcp);
     return 0;
 }
 
@@ -119,7 +118,7 @@ static int ff_tls_open(URLContext *h, const char *uri, int flags, AVDictionary *
 
     if (!c->listen) {
         ret = tls_connect_cbs(p->ctx, tls_read_callback, tls_write_callback,
-            c->tcp, !c->numerichost ? c->host : NULL);
+            c->tcp, c->host);
     } else {
         struct tls *ctx_new;
         ret = tls_accept_cbs(p->ctx, &ctx_new, tls_read_callback,

@@ -100,7 +100,7 @@ int avcodec_dct_init(AVDCT *dsp)
 
 #if CONFIG_IDCTDSP
     {
-        IDCTDSPContext idsp;
+        IDCTDSPContext idsp = {0};
         ff_idctdsp_init(&idsp, avctx);
         COPY(idsp, idct);
         COPY(idsp, idct_permutation);
@@ -120,11 +120,11 @@ int avcodec_dct_init(AVDCT *dsp)
         PixblockDSPContext pdsp;
         ff_pixblockdsp_init(&pdsp, avctx);
         COPY(pdsp, get_pixels);
+        COPY(pdsp, get_pixels_unaligned);
     }
 #endif
 
-    avcodec_close(avctx);
-    av_free(avctx);
+    avcodec_free_context(&avctx);
 
     return 0;
 }

@@ -20,23 +20,19 @@
 
 #include "config.h"
 #include "libavutil/thread.h"
-#include "avdevice.h"
-
-#if FF_API_NEXT
 #include "libavformat/internal.h"
-#endif
+#include "avdevice.h"
 
 /* devices */
 extern AVInputFormat  ff_alsa_demuxer;
 extern AVOutputFormat ff_alsa_muxer;
 extern AVInputFormat  ff_android_camera_demuxer;
+extern AVOutputFormat ff_audiotoolbox_muxer;
 extern AVInputFormat  ff_avfoundation_demuxer;
 extern AVInputFormat  ff_bktr_demuxer;
 extern AVOutputFormat ff_caca_muxer;
 extern AVInputFormat  ff_decklink_demuxer;
 extern AVOutputFormat ff_decklink_muxer;
-extern AVInputFormat  ff_libndi_newtek_demuxer;
-extern AVOutputFormat ff_libndi_newtek_muxer;
 extern AVInputFormat  ff_dshow_demuxer;
 extern AVInputFormat  ff_fbdev_demuxer;
 extern AVOutputFormat ff_fbdev_muxer;
@@ -67,108 +63,79 @@ extern AVInputFormat  ff_libdc1394_demuxer;
 #include "libavdevice/outdev_list.c"
 #include "libavdevice/indev_list.c"
 
-const AVOutputFormat *av_outdev_iterate(void **opaque)
+void avdevice_register_all(void)
 {
-    uintptr_t i = (uintptr_t)*opaque;
-    const AVOutputFormat *f = outdev_list[i];
-
-    if (f)
-        *opaque = (void*)(i + 1);
-    return f;
-}
-
-const AVInputFormat *av_indev_iterate(void **opaque)
-{
-    uintptr_t i = (uintptr_t)*opaque;
-    const AVInputFormat *f = indev_list[i];
-
-    if (f)
-        *opaque = (void*)(i + 1);
-    return f;
-}
-
-#if FF_API_NEXT
-FF_DISABLE_DEPRECATION_WARNINGS
-static AVOnce av_device_next_init = AV_ONCE_INIT;
-
-static void av_device_init_next(void)
-{
-    AVOutputFormat *prevout = NULL, *out;
-    AVInputFormat *previn = NULL, *in;
-    void *i = 0;
-
-    while ((out = (AVOutputFormat*)av_outdev_iterate(&i))) {
-        if (prevout)
-            prevout->next = out;
-        prevout = out;
-    }
-
-    i = 0;
-    while ((in = (AVInputFormat*)av_indev_iterate(&i))) {
-        if (previn)
-            previn->next = in;
-        previn = in;
-    }
-
     avpriv_register_devices(outdev_list, indev_list);
 }
 
-void avdevice_register_all(void)
-{
-    ff_thread_once(&av_device_next_init, av_device_init_next);
-}
-
-static void *device_next(void *prev, int output,
-                         AVClassCategory c1, AVClassCategory c2)
+static void *next_input(const AVInputFormat *prev, AVClassCategory c2)
 {
     const AVClass *pc;
+    const AVClassCategory c1 = AV_CLASS_CATEGORY_DEVICE_INPUT;
     AVClassCategory category = AV_CLASS_CATEGORY_NA;
+    const AVInputFormat *fmt = NULL;
+    int i = 0;
 
-    ff_thread_once(&av_device_next_init, av_device_init_next);
-
-    if (!prev && !(prev = (output ? (void*)outdev_list[0] : (void*)indev_list[0])))
-        return NULL;
+    while (prev && (fmt = indev_list[i])) {
+        i++;
+        if (prev == fmt)
+            break;
+    }
 
     do {
-        if (output) {
-            if (!(prev = ((AVOutputFormat *)prev)->next))
-                break;
-            pc = ((AVOutputFormat *)prev)->priv_class;
-        } else {
-            if (!(prev = ((AVInputFormat *)prev)->next))
-                break;
-            pc = ((AVInputFormat *)prev)->priv_class;
-        }
+        fmt = indev_list[i++];
+        if (!fmt)
+            break;
+        pc = fmt->priv_class;
         if (!pc)
             continue;
         category = pc->category;
     } while (category != c1 && category != c2);
-    return prev;
+    return (AVInputFormat *)fmt;
+}
+
+static void *next_output(const AVOutputFormat *prev, AVClassCategory c2)
+{
+    const AVClass *pc;
+    const AVClassCategory c1 = AV_CLASS_CATEGORY_DEVICE_OUTPUT;
+    AVClassCategory category = AV_CLASS_CATEGORY_NA;
+    const AVOutputFormat *fmt = NULL;
+    int i = 0;
+
+    while (prev && (fmt = outdev_list[i])) {
+        i++;
+        if (prev == fmt)
+            break;
+    }
+
+    do {
+        fmt = outdev_list[i++];
+        if (!fmt)
+            break;
+        pc = fmt->priv_class;
+        if (!pc)
+            continue;
+        category = pc->category;
+    } while (category != c1 && category != c2);
+    return (AVOutputFormat *)fmt;
 }
 
 AVInputFormat *av_input_audio_device_next(AVInputFormat  *d)
 {
-    return device_next(d, 0, AV_CLASS_CATEGORY_DEVICE_AUDIO_INPUT,
-                       AV_CLASS_CATEGORY_DEVICE_INPUT);
+    return next_input(d, AV_CLASS_CATEGORY_DEVICE_AUDIO_INPUT);
 }
 
 AVInputFormat *av_input_video_device_next(AVInputFormat  *d)
 {
-    return device_next(d, 0, AV_CLASS_CATEGORY_DEVICE_VIDEO_INPUT,
-                       AV_CLASS_CATEGORY_DEVICE_INPUT);
+    return next_input(d, AV_CLASS_CATEGORY_DEVICE_VIDEO_INPUT);
 }
 
 AVOutputFormat *av_output_audio_device_next(AVOutputFormat *d)
 {
-    return device_next(d, 1, AV_CLASS_CATEGORY_DEVICE_AUDIO_OUTPUT,
-                       AV_CLASS_CATEGORY_DEVICE_OUTPUT);
+    return next_output(d, AV_CLASS_CATEGORY_DEVICE_AUDIO_OUTPUT);
 }
 
 AVOutputFormat *av_output_video_device_next(AVOutputFormat *d)
 {
-    return device_next(d, 1, AV_CLASS_CATEGORY_DEVICE_VIDEO_OUTPUT,
-                       AV_CLASS_CATEGORY_DEVICE_OUTPUT);
+    return next_output(d, AV_CLASS_CATEGORY_DEVICE_VIDEO_OUTPUT);
 }
-FF_DISABLE_DEPRECATION_WARNINGS
-#endif
-

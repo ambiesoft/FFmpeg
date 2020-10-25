@@ -62,6 +62,9 @@ typedef struct AmfContext {
     AVBufferRef        *hw_device_ctx; ///< pointer to HW accelerator (decoder)
     AVBufferRef        *hw_frames_ctx; ///< pointer to HW accelerator (frame allocator)
 
+    int                 hwsurfaces_in_queue;
+    int                 hwsurfaces_in_queue_max;
+
     // helpers to handle async calls
     int                 delayed_drain;
     AMFSurface         *delayed_surface;
@@ -126,8 +129,6 @@ int ff_amf_encode_close(AVCodecContext *avctx);
 /**
 * Ecoding one frame - common function for all AMF encoders
 */
-
-int ff_amf_send_frame(AVCodecContext *avctx, const AVFrame *frame);
 int ff_amf_receive_packet(AVCodecContext *avctx, AVPacket *avpkt);
 
 /**

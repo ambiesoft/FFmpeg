@@ -41,3 +41,5 @@
 ffmpeg.sln
 ffprobe.sln
 test.obj
+/tools/python/__pycache__/
+

@@ -30,13 +30,11 @@ consult @url{https://ffmpeg.org/legal.html}.
 
 @chapter Contributing
 
-There are 3 ways by which code gets into FFmpeg.
+There are 2 ways by which code gets into FFmpeg:
 @itemize @bullet
-@item Submitting patches to the main developer mailing list.
+@item Submitting patches to the ffmpeg-devel mailing list.
       See @ref{Submitting patches} for details.
 @item Directly committing changes to the main tree.
-@item Committing changes to a git clone, for example on github.com or
-      gitorious.org. And asking us to merge these changes.
 @end itemize
 
 Whichever way, changes should be reviewed by the maintainer of the code
@@ -129,6 +127,12 @@ designated struct initializers (@samp{struct s x = @{ .i = 17 @};});
 
 @item
 compound literals (@samp{x = (struct s) @{ 17, 23 @};}).
+
+@item
+for loops with variable definition (@samp{for (int i = 0; i < 8; i++)});
+
+@item
+Variadic macros (@samp{#define ARRAY(nb, ...) (int[nb + 1])@{ nb, __VA_ARGS__ @}});
 
 @item
 Implementation defined behavior for signed integers is assumed to match the
@@ -562,9 +566,9 @@ Does @code{make fate} pass with the patch applied?
 Was the patch generated with git format-patch or send-email?
 
 @item
-Did you sign off your patch? (git commit -s)
-See @url{http://git.kernel.org/?p=linux/kernel/git/torvalds/linux.git;a=blob_plain;f=Documentation/SubmittingPatches} for the meaning
-of sign off.
+Did you sign-off your patch? (@code{git commit -s})
+See @uref{https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/plain/Documentation/process/submitting-patches.rst, Sign your work} for the meaning
+of @dfn{sign-off}.
 
 @item
 Did you provide a clear git commit log message?
@@ -621,7 +625,7 @@ If the patch fixes a bug, did you provide a verbose analysis of the bug?
 If the patch fixes a bug, did you provide enough information, including
 a sample, so the bug can be reproduced and the fix can be verified?
 Note please do not attach samples >100k to mails but rather provide a
-URL, you can upload to ftp://upload.ffmpeg.org.
+URL, you can upload to @url{https://streams.videolan.org/upload/}.
 
 @item
 Did you provide a verbose summary about what the patch does change?

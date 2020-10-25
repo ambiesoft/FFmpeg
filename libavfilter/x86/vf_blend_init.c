@@ -72,12 +72,22 @@ BLEND_FUNC(negation, avx2)
 #if ARCH_X86_64
 BLEND_FUNC(addition_16, sse2)
 BLEND_FUNC(addition_16, avx2)
+BLEND_FUNC(grainmerge_16, sse4)
+BLEND_FUNC(grainmerge_16, avx2)
+BLEND_FUNC(average_16, sse2)
+BLEND_FUNC(average_16, avx2)
 BLEND_FUNC(and_16, sse2)
 BLEND_FUNC(and_16, avx2)
 BLEND_FUNC(darken_16, sse4)
 BLEND_FUNC(darken_16, avx2)
+BLEND_FUNC(grainextract_16, sse4)
+BLEND_FUNC(grainextract_16, avx2)
 BLEND_FUNC(difference_16, sse4)
 BLEND_FUNC(difference_16, avx2)
+BLEND_FUNC(extremity_16, sse4)
+BLEND_FUNC(extremity_16, avx2)
+BLEND_FUNC(negation_16, sse4)
+BLEND_FUNC(negation_16, avx2)
 BLEND_FUNC(lighten_16, sse4)
 BLEND_FUNC(lighten_16, avx2)
 BLEND_FUNC(or_16, sse2)
@@ -90,11 +100,11 @@ BLEND_FUNC(xor_16, sse2)
 BLEND_FUNC(xor_16, avx2)
 #endif /* ARCH_X86_64 */
 
-av_cold void ff_blend_init_x86(FilterParams *param, int is_16bit)
+av_cold void ff_blend_init_x86(FilterParams *param, int depth)
 {
     int cpu_flags = av_get_cpu_flags();
 
-    if (!is_16bit) {
+    if (depth == 8) {
         if (EXTERNAL_SSE2(cpu_flags) && param->opacity == 1) {
             switch (param->mode) {
             case BLEND_ADDITION:     param->blend = ff_blend_addition_sse2;     break;
@@ -146,12 +156,13 @@ av_cold void ff_blend_init_x86(FilterParams *param, int is_16bit)
             case BLEND_NEGATION:     param->blend = ff_blend_negation_avx2;     break;
             }
         }
-    } else { /* is_16_bit */
+    } else if (depth == 16) {
 #if ARCH_X86_64
         if (EXTERNAL_SSE2(cpu_flags) && param->opacity == 1) {
             switch (param->mode) {
             case BLEND_ADDITION: param->blend = ff_blend_addition_16_sse2; break;
             case BLEND_AND:      param->blend = ff_blend_and_16_sse2;      break;
+            case BLEND_AVERAGE:  param->blend = ff_blend_average_16_sse2;  break;
             case BLEND_OR:       param->blend = ff_blend_or_16_sse2;       break;
             case BLEND_SUBTRACT: param->blend = ff_blend_subtract_16_sse2; break;
             case BLEND_XOR:      param->blend = ff_blend_xor_16_sse2;      break;
@@ -159,8 +170,12 @@ av_cold void ff_blend_init_x86(FilterParams *param, int is_16bit)
         }
         if (EXTERNAL_SSE4(cpu_flags) && param->opacity == 1) {
             switch (param->mode) {
+            case BLEND_GRAINMERGE: param->blend = ff_blend_grainmerge_16_sse4; break;
             case BLEND_DARKEN:   param->blend = ff_blend_darken_16_sse4;     break;
+            case BLEND_GRAINEXTRACT: param->blend = ff_blend_grainextract_16_sse4; break;
             case BLEND_DIFFERENCE: param->blend = ff_blend_difference_16_sse4; break;
+            case BLEND_EXTREMITY:  param->blend = ff_blend_extremity_16_sse4;    break;
+            case BLEND_NEGATION:  param->blend = ff_blend_negation_16_sse4;     break;
             case BLEND_LIGHTEN:  param->blend = ff_blend_lighten_16_sse4;    break;
             case BLEND_PHOENIX:  param->blend = ff_blend_phoenix_16_sse4;    break;
             }
@@ -168,9 +183,14 @@ av_cold void ff_blend_init_x86(FilterParams *param, int is_16bit)
         if (EXTERNAL_AVX2_FAST(cpu_flags) && param->opacity == 1) {
             switch (param->mode) {
             case BLEND_ADDITION: param->blend = ff_blend_addition_16_avx2; break;
+            case BLEND_GRAINMERGE: param->blend = ff_blend_grainmerge_16_avx2;   break;
             case BLEND_AND:      param->blend = ff_blend_and_16_avx2;      break;
+            case BLEND_AVERAGE:  param->blend = ff_blend_average_16_avx2;  break;
             case BLEND_DARKEN:   param->blend = ff_blend_darken_16_avx2;   break;
+            case BLEND_GRAINEXTRACT: param->blend = ff_blend_grainextract_16_avx2; break;
             case BLEND_DIFFERENCE: param->blend = ff_blend_difference_16_avx2; break;
+            case BLEND_EXTREMITY:  param->blend = ff_blend_extremity_16_avx2;    break;
+            case BLEND_NEGATION:  param->blend = ff_blend_negation_16_avx2;     break;
             case BLEND_LIGHTEN:  param->blend = ff_blend_lighten_16_avx2;  break;
             case BLEND_OR:       param->blend = ff_blend_or_16_avx2;       break;
             case BLEND_PHOENIX:  param->blend = ff_blend_phoenix_16_avx2;  break;

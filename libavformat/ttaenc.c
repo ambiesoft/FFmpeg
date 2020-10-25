@@ -22,6 +22,7 @@
 #include "libavutil/crc.h"
 #include "libavutil/intreadwrite.h"
 
+#include "libavcodec/packet_internal.h"
 #include "apetag.h"
 #include "avformat.h"
 #include "avio_internal.h"
@@ -91,22 +92,13 @@ static int tta_write_header(AVFormatContext *s)
 static int tta_write_packet(AVFormatContext *s, AVPacket *pkt)
 {
     TTAMuxContext *tta = s->priv_data;
-    AVPacketList *pktl = av_mallocz(sizeof(*pktl));
     int ret;
 
-    if (!pktl)
-        return AVERROR(ENOMEM);
-
-    ret = av_packet_ref(&pktl->pkt, pkt);
+    ret = avpriv_packet_list_put(&tta->queue, &tta->queue_end, pkt,
+                                 av_packet_ref, 0);
     if (ret < 0) {
-        av_free(pktl);
         return ret;
     }
-    if (tta->queue_end)
-        tta->queue_end->next = pktl;
-    else
-        tta->queue = pktl;
-    tta->queue_end = pktl;
 
     avio_wl32(tta->seek_table, pkt->size);
     tta->nb_samples += pkt->duration;
@@ -131,16 +123,13 @@ static int tta_write_packet(AVFormatContext *s, AVPacket *pkt)
 static void tta_queue_flush(AVFormatContext *s)
 {
     TTAMuxContext *tta = s->priv_data;
-    AVPacketList *pktl;
+    AVPacket pkt;
 
-    while (pktl = tta->queue) {
-        AVPacket *pkt = &pktl->pkt;
-        avio_write(s->pb, pkt->data, pkt->size);
-        av_packet_unref(pkt);
-        tta->queue = pktl->next;
-        av_free(pktl);
+    while (tta->queue) {
+        avpriv_packet_list_get(&tta->queue, &tta->queue_end, &pkt);
+        avio_write(s->pb, pkt.data, pkt.size);
+        av_packet_unref(&pkt);
     }
-    tta->queue_end = NULL;
 }
 
 static int tta_write_trailer(AVFormatContext *s)
@@ -157,17 +146,23 @@ static int tta_write_trailer(AVFormatContext *s)
     /* Write Seek table */
     crc = ffio_get_checksum(tta->seek_table) ^ UINT32_MAX;
     avio_wl32(tta->seek_table, crc);
-    size = avio_close_dyn_buf(tta->seek_table, &ptr);
+    size = avio_get_dyn_buf(tta->seek_table, &ptr);
     avio_write(s->pb, ptr, size);
-    av_free(ptr);
 
     /* Write audio data */
     tta_queue_flush(s);
 
     ff_ape_write_tag(s);
-    avio_flush(s->pb);
 
     return 0;
+}
+
+static void tta_deinit(AVFormatContext *s)
+{
+    TTAMuxContext *tta = s->priv_data;
+
+    ffio_free_dyn_buf(&tta->seek_table);
+    avpriv_packet_list_free(&tta->queue, &tta->queue_end);
 }
 
 AVOutputFormat ff_tta_muxer = {
@@ -179,6 +174,7 @@ AVOutputFormat ff_tta_muxer = {
     .audio_codec       = AV_CODEC_ID_TTA,
     .video_codec       = AV_CODEC_ID_NONE,
     .init              = tta_init,
+    .deinit            = tta_deinit,
     .write_header      = tta_write_header,
     .write_packet      = tta_write_packet,
     .write_trailer     = tta_write_trailer,
